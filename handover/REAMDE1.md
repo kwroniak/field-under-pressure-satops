@@ -8,7 +8,7 @@ Działa już mapa pól w Lizmapie, kalendarz 7 dni dla 108 pól >= 3ha (tryb his
 <img width="1912" height="910" alt="image" src="https://github.com/user-attachments/assets/a86c2319-5e09-4b99-9e20-ddb50711991e" />
 
 
-Największe ryzyka to brak danych satelitarnych dla naszego obszaru - kafel 33UXR vs pola 34U...), domyślny profil gleby i nieużywane dane Bayera. Na prezentację pokazujemy jedno pole i jedną historię z wynikiem w pln-ach.
+Największe ryzyka to domyślny profil gleby i nieużywane dane Bayera. Na prezentację pokazujemy jedno pole i jedną historię z wynikiem w pln-ach.
 
 
 ## AUDYT CO BYŁO ZŁE I CO Z TYM ROBIMY

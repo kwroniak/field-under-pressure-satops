@@ -17,7 +17,7 @@ Główny błąd koncepcji: ocena opiera się na jednej średniej dla całego pol
 
 Założenia koncepcji
 
-Ocena per pole (średnia) - rolnik co może z tym zrobić? gówno w sumie - rozsiewacz potrzebuje mapy dawek - strefy 10m w polu i mapa dawek N
+Ocena per pole (średnia) - rolnik co może z tym zrobić? g@wno w sumie - rozsiewacz potrzebuje mapy dawek - strefy 10m w polu i mapa dawek N
 
 LSTM prognozujący NDVI/NDMI na 7 dni - wyszło na to że prognoza się chu8 zmienia z rzadkich i zachmurzonych obserwacji - jury może się zapytać o dokładność a nie ma czym jej wykazać; model nie ma wpływu na decyzje - IMO bym to wyrzucił i zamiast tego porównanie z normą upraw z lat wstecz czytaj 2020-2024
 

@@ -21,7 +21,7 @@ from ml.config import (
     ModelConfig,
     TrainConfig,
 )
-from ml.dataset import FeatureScaler, FieldTimeSeriesDataset, split_indices
+from ml.dataset import FeatureScaler, PixelTimeSeriesDataset, split_indices
 from ml.model import VegetationLSTM, compute_masked_metrics, masked_smooth_l1_loss
 from ml.prepare_dataset import generate_synthetic_demo_dataset
 
@@ -80,7 +80,8 @@ def train_model(
     train_cfg: TrainConfig | None = None,
 ) -> dict:
     """
-    Trenuje model VegetationLSTM na danych z data_dir i zapisuje najlepszy
+    Trenuje model VegetationLSTM na szeregach czasowych **per piksel**
+    (NDVI/NDMI z satellite_indices + pogoda/gleba z pola) i zapisuje najlepszy
     checkpoint (wraz ze skalerem i konfiguracją) do checkpoint_path.
     """
     model_cfg = model_cfg or ModelConfig()
@@ -91,7 +92,7 @@ def train_model(
     device = _select_device()
 
     data_dir = Path(data_dir)
-    dataset = FieldTimeSeriesDataset(
+    dataset = PixelTimeSeriesDataset(
         fields_master_parquet=data_dir / "fields_master.parquet",
         satellite_indices_parquet=data_dir / "satellite_indices.parquet",
         weather_daily_parquet=data_dir / "weather_daily.parquet",
@@ -128,8 +129,11 @@ def train_model(
     best_val_loss = float("inf")
     best_metrics: dict[str, float] = {}
 
+    n_pixels = len({s["pixel_id"] for s in dataset.samples})
+    n_fields = len({s["field_id"] for s in dataset.samples})
     print(
         f"[TRAIN] Start na {device}: okna train={len(train_idx)}, val={len(val_idx)}, "
+        f"piksele={n_pixels}, pola={n_fields}, "
         f"tryb={train_cfg.split_mode}/{train_cfg.target_mode}, epoki={train_cfg.epochs}"
     )
 
@@ -199,7 +203,9 @@ def train_model(
 
 
 def _build_cli() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Trening modelu VegetationLSTM (prognoza NDVI i NDMI na 7 dni).")
+    p = argparse.ArgumentParser(
+        description="Trening VegetationLSTM — prognoza NDVI/NDMI na 7 dni dla konkretnego piksela."
+    )
     p.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR), help="Folder z fields_master/satellite_indices/weather_daily.")
     p.add_argument("--checkpoint", default=str(DEFAULT_CHECKPOINT_PATH), help="Ścieżka zapisu wag modelu (.pt).")
     p.add_argument("--epochs", type=int, default=30)
@@ -207,9 +213,9 @@ def _build_cli() -> argparse.ArgumentParser:
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--hidden-size", type=int, default=64)
     p.add_argument("--num-layers", type=int, default=2)
-    p.add_argument("--split-mode", choices=("field", "time"), default="field")
+    p.add_argument("--split-mode", choices=("field", "time", "pixel"), default="field")
     p.add_argument("--target-mode", choices=("observed", "interpolated"), default="observed")
-    p.add_argument("--demo", action="store_true", help="Wygeneruj syntetyczne dane w data/ml/demo i odpal trening testowy.")
+    p.add_argument("--demo", action="store_true", help="Wygeneruj syntetyczne dane per-piksel w data/ml/demo i odpal trening.")
     return p
 
 

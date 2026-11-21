@@ -53,7 +53,7 @@ class FeatureScaler:
 
     def fit_from_dataset(
         self,
-        dataset: "FieldTimeSeriesDataset",
+        dataset: "PixelTimeSeriesDataset",
         train_indices: list[int],
     ) -> "FeatureScaler":
         if not train_indices:
@@ -198,8 +198,13 @@ def build_field_daily_series(
             exact_prev[i] = float(i - prev_i)
     nearest_gap = np.minimum(exact_prev, days_until)
 
-    ndvi_filled = pd.Series(ndvi_obs).interpolate(method="linear").ffill().bfill().to_numpy(dtype=np.float32)
-    ndmi_filled = pd.Series(ndmi_obs).interpolate(method="linear").ffill().bfill().to_numpy(dtype=np.float32)
+    # Przyczynowe wypełnianie dla wejść modelu (x_hist, last_targets) — zero przecieku z przyszłości
+    ndvi_causal = pd.Series(ndvi_obs).ffill().bfill().to_numpy(dtype=np.float32)
+    ndmi_causal = pd.Series(ndmi_obs).ffill().bfill().to_numpy(dtype=np.float32)
+
+    # Interpolacja liniowa używana WYŁĄCZNIE jako cel (y_target) w trybie target_mode='interpolated'
+    ndvi_interp = pd.Series(ndvi_obs).interpolate(method="linear").ffill().bfill().to_numpy(dtype=np.float32)
+    ndmi_interp = pd.Series(ndmi_obs).interpolate(method="linear").ffill().bfill().to_numpy(dtype=np.float32)
 
     # 3. Sklejanie macierzy cech
     weather_mat = w_merged[list(WEATHER_COLS)].to_numpy(dtype=np.float32)
@@ -212,8 +217,8 @@ def build_field_daily_series(
 
     hist_matrix = np.column_stack(
         [
-            ndvi_filled,
-            ndmi_filled,
+            ndvi_causal,
+            ndmi_causal,
             obs_mask,
             days_since_norm,
             weather_mat,
@@ -237,8 +242,12 @@ def build_field_daily_series(
         "hist_matrix": hist_matrix,
         "future_matrix": future_matrix,
         "static_vec": static_vec,
-        "ndvi_filled": ndvi_filled,
-        "ndmi_filled": ndmi_filled,
+        "ndvi_causal": ndvi_causal,
+        "ndmi_causal": ndmi_causal,
+        "ndvi_interp": ndvi_interp,
+        "ndmi_interp": ndmi_interp,
+        "ndvi_filled": ndvi_causal,
+        "ndmi_filled": ndmi_causal,
         "ndvi_obs": ndvi_obs,
         "ndmi_obs": ndmi_obs,
         "obs_mask": obs_mask,
@@ -246,10 +255,13 @@ def build_field_daily_series(
     }
 
 
-class FieldTimeSeriesDataset(Dataset):
+class PixelTimeSeriesDataset(Dataset):
     """
-    Okna przesuwne (56 dni historii -> 7 dni prognozy NDVI i NDMI)
+    Okna przesuwne per piksel (56 dni historii -> 7 dni prognozy NDVI i NDMI)
     z maską utraty dla nieregularnych obserwacji Sentinel-2.
+
+    Jednostka treningowa = jeden piksel (`pixel_id`). Pogoda i gleba pochodzą
+    z pola nadrzędnego (`field_id`); cele NDVI/NDMI są wartościami piksela.
     """
 
     def __init__(
@@ -277,18 +289,35 @@ class FieldTimeSeriesDataset(Dataset):
         sat_df["field_id"] = sat_df["field_id"].astype(str)
         weather_df["field_id"] = weather_df["field_id"].astype(str)
 
-        sat_by_field = {fid: grp for fid, grp in sat_df.groupby("field_id")}
-        weather_by_field = {fid: grp for fid, grp in weather_df.groupby("field_id")}
+        # Kompatybilność wsteczna: stare pliki bez pixel_id (= średnia pola)
+        if "pixel_id" not in sat_df.columns:
+            sat_df = sat_df.copy()
+            sat_df["pixel_id"] = sat_df["field_id"].astype(str) + "__field_mean"
+            if "lon" not in sat_df.columns:
+                sat_df = sat_df.merge(
+                    fields_df[["field_id", "centroid_lon", "centroid_lat"]].rename(
+                        columns={"centroid_lon": "lon", "centroid_lat": "lat"}
+                    ),
+                    on="field_id",
+                    how="left",
+                )
 
-        for _, f_row in fields_df.iterrows():
-            fid = f_row["field_id"]
-            if fid not in sat_by_field or fid not in weather_by_field:
+        sat_df["pixel_id"] = sat_df["pixel_id"].astype(str)
+        fields_by_id = {r["field_id"]: r for _, r in fields_df.iterrows()}
+        weather_by_field = {fid: grp for fid, grp in weather_df.groupby("field_id")}
+        sat_by_pixel = {pid: grp for pid, grp in sat_df.groupby("pixel_id")}
+
+        for pid, s_sub in sat_by_pixel.items():
+            fid = str(s_sub["field_id"].iloc[0])
+            if fid not in fields_by_id or fid not in weather_by_field:
                 continue
 
+            f_row = fields_by_id[fid]
             w_sub = weather_by_field[fid]
-            s_sub = sat_by_field[fid]
             d_start = w_sub["date"].min()
             d_end = w_sub["date"].max()
+            lon = float(s_sub["lon"].iloc[0]) if "lon" in s_sub.columns else float("nan")
+            lat = float(s_sub["lat"].iloc[0]) if "lat" in s_sub.columns else float("nan")
 
             series = build_field_daily_series(
                 f_row,
@@ -305,13 +334,14 @@ class FieldTimeSeriesDataset(Dataset):
             if n < history_days + forecast_days:
                 continue
 
+            eff_min_hist_obs = max(1, int(min_hist_obs))
             for anchor in range(history_days - 1, n - forecast_days):
                 h_start = anchor - history_days + 1
                 h_end = anchor + 1
                 f_start = anchor + 1
                 f_end = anchor + 1 + forecast_days
 
-                if int(series["obs_mask"][h_start:h_end].sum()) < min_hist_obs:
+                if int(series["obs_mask"][h_start:h_end].sum()) < eff_min_hist_obs:
                     continue
 
                 if target_mode == "observed":
@@ -319,8 +349,8 @@ class FieldTimeSeriesDataset(Dataset):
                     y_ndmi = series["ndmi_obs"][f_start:f_end]
                     mask_1d = series["obs_mask"][f_start:f_end]
                 elif target_mode == "interpolated":
-                    y_ndvi = series["ndvi_filled"][f_start:f_end]
-                    y_ndmi = series["ndmi_filled"][f_start:f_end]
+                    y_ndvi = series["ndvi_interp"][f_start:f_end]
+                    y_ndmi = series["ndmi_interp"][f_start:f_end]
                     mask_1d = series["interp_mask"][f_start:f_end]
                 else:
                     raise ValueError(f"Nieznany target_mode: {target_mode!r}")
@@ -337,13 +367,16 @@ class FieldTimeSeriesDataset(Dataset):
                 ).astype(np.float32)
                 y_mask = np.stack([mask_1d, mask_1d], axis=-1).astype(np.float32)
                 last_targets = np.asarray(
-                    [series["ndvi_filled"][anchor], series["ndmi_filled"][anchor]],
+                    [series["ndvi_causal"][anchor], series["ndmi_causal"][anchor]],
                     dtype=np.float32,
                 )
 
                 self.samples.append(
                     {
+                        "pixel_id": pid,
                         "field_id": fid,
+                        "lon": lon,
+                        "lat": lat,
                         "anchor_date": str(series["dates"][anchor]),
                         "x_hist": series["hist_matrix"][h_start:h_end],
                         "x_future": series["future_matrix"][f_start:f_end],
@@ -378,15 +411,20 @@ class FieldTimeSeriesDataset(Dataset):
         }
 
 
+# Alias wsteczny
+FieldTimeSeriesDataset = PixelTimeSeriesDataset
+
+
 def split_indices(
-    dataset: FieldTimeSeriesDataset,
+    dataset: PixelTimeSeriesDataset,
     val_ratio: float = 0.2,
-    split_mode: Literal["field", "time"] = "field",
+    split_mode: Literal["field", "time", "pixel"] = "field",
     seed: int = 42,
 ) -> tuple[list[int], list[int]]:
     """
     Dzieli próbki na zbiór treningowy i walidacyjny bez wycieku danych
-    (wg pól lub chronologicznie wg daty zakotwiczenia).
+    (wg pól, pikseli lub chronologicznie wg daty zakotwiczenia).
+    Domyślnie `field` — wszystkie piksele jednego pola lądują w tym samym splocie.
     """
     n = len(dataset)
     if n < 2:
@@ -403,9 +441,30 @@ def split_indices(
             train_idx = [i for i, s in enumerate(dataset.samples) if s["field_id"] not in val_fields]
             val_idx = [i for i, s in enumerate(dataset.samples) if s["field_id"] in val_fields]
             return train_idx, val_idx
-        print("[UWAGA] Tylko 1 pole w zbiorze — przełączam podział walidacyjny na tryb czasowy ('time').")
+        print("[UWAGA] Tylko 1 pole w zbiorze — przełączam podział walidacyjny na tryb 'pixel'.")
+        split_mode = "pixel"
+
+    if split_mode == "pixel":
+        pixels = sorted({s["pixel_id"] for s in dataset.samples})
+        if len(pixels) >= 2:
+            rng = np.random.default_rng(seed)
+            shuffled = list(pixels)
+            rng.shuffle(shuffled)
+            n_val_px = max(1, min(len(pixels) - 1, round(len(pixels) * val_ratio)))
+            val_pixels = set(shuffled[:n_val_px])
+            train_idx = [i for i, s in enumerate(dataset.samples) if s["pixel_id"] not in val_pixels]
+            val_idx = [i for i, s in enumerate(dataset.samples) if s["pixel_id"] in val_pixels]
+            return train_idx, val_idx
+        print("[UWAGA] Tylko 1 piksel w zbiorze — przełączam podział walidacyjny na tryb czasowy ('time').")
 
     # Podział czasowy (bez przecieku w przyszłość)
-    ordered = sorted(range(n), key=lambda i: (dataset.samples[i]["anchor_date"], dataset.samples[i]["field_id"]))
+    ordered = sorted(
+        range(n),
+        key=lambda i: (
+            dataset.samples[i]["anchor_date"],
+            dataset.samples[i]["field_id"],
+            dataset.samples[i]["pixel_id"],
+        ),
+    )
     cut = max(1, min(n - 1, int(round(n * (1.0 - val_ratio)))))
     return ordered[:cut], ordered[cut:]

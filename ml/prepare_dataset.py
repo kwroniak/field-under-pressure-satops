@@ -1,5 +1,6 @@
 import argparse
 from datetime import date, timedelta
+import hashlib
 from pathlib import Path
 import re
 import sys
@@ -10,9 +11,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
-from rasterio.features import geometry_mask
-import rasterio.mask
-from shapely.geometry import box
+from rasterio.transform import xy as transform_xy
+from shapely.geometry import Point, box
 
 if __package__ in (None, ""):
     _repo_root = str(Path(__file__).resolve().parent.parent)
@@ -21,6 +21,8 @@ if __package__ in (None, ""):
 
 from ml.config import (
     DEFAULT_DATA_DIR,
+    DEFAULT_PIXEL_SEED,
+    DEFAULT_PIXELS_PER_FIELD,
     MVP_CROP_CODE_TO_NAME,
     WEATHER_COLS,
 )
@@ -151,17 +153,121 @@ def _normalize_tiff_inputs(
     return normalized
 
 
+def _band_index_map(src: rasterio.DatasetReader) -> dict[str, int]:
+    return {
+        (src.descriptions[i] or "").strip().lower(): i + 1
+        for i in range(src.count)
+        if src.descriptions[i]
+    }
+
+
+def _ndvi_ndmi_from_sample(vals: np.ndarray, has_precomputed: bool) -> tuple[float, float]:
+    """Zwraca (ndvi, ndmi) z wektora sample(); NaN gdy brak danych."""
+    v = np.asarray(vals, dtype=np.float64).ravel()
+    if has_precomputed:
+        if v.size < 2 or not np.all(np.isfinite(v[:2])):
+            return float("nan"), float("nan")
+        return float(np.clip(v[0], -1.0, 1.0)), float(np.clip(v[1], -1.0, 1.0))
+
+    if v.size < 3:
+        return float("nan"), float("nan")
+    red, nir, swir = v[0], v[1], v[2]
+    if red == 0 or nir == 0 or swir == 0:
+        return float("nan"), float("nan")
+    if not (np.isfinite(red) and np.isfinite(nir) and np.isfinite(swir)):
+        return float("nan"), float("nan")
+    d_ndvi = nir + red
+    d_ndmi = nir + swir
+    ndvi = (nir - red) / d_ndvi if d_ndvi != 0 else float("nan")
+    ndmi = (nir - swir) / d_ndmi if d_ndmi != 0 else float("nan")
+    if not (np.isfinite(ndvi) and np.isfinite(ndmi)):
+        return float("nan"), float("nan")
+    return float(np.clip(ndvi, -1.0, 1.0)), float(np.clip(ndmi, -1.0, 1.0))
+
+
+def _sample_points_in_polygon(
+    geom,
+    n_points: int,
+    rng: np.random.Generator,
+    max_tries_factor: int = 80,
+) -> list[tuple[float, float]]:
+    """Losuje punkty WGS84 wewnątrz poligonu (rejection sampling w bbox)."""
+    if geom is None or geom.is_empty:
+        return []
+    minx, miny, maxx, maxy = geom.bounds
+    if not np.isfinite([minx, miny, maxx, maxy]).all() or maxx <= minx or maxy <= miny:
+        return []
+
+    pts: list[tuple[float, float]] = []
+    max_tries = max(n_points * max_tries_factor, n_points + 20)
+    for _ in range(max_tries):
+        if len(pts) >= n_points:
+            break
+        x = float(rng.uniform(minx, maxx))
+        y = float(rng.uniform(miny, maxy))
+        if geom.contains(Point(x, y)):
+            pts.append((x, y))
+
+    if len(pts) < n_points:
+        # Fallback: centroid (+ lekkie jittery w bbox, jeśli centroid w poligonie)
+        c = geom.representative_point()
+        while len(pts) < n_points:
+            jx = float(np.clip(c.x + rng.normal(0, (maxx - minx) * 0.05), minx, maxx))
+            jy = float(np.clip(c.y + rng.normal(0, (maxy - miny) * 0.05), miny, maxy))
+            p = Point(jx, jy)
+            if geom.contains(p):
+                pts.append((jx, jy))
+            elif geom.contains(c):
+                pts.append((float(c.x), float(c.y)))
+            else:
+                break
+    return pts[:n_points]
+
+
+def _build_pixel_catalog(
+    gdf_wgs84: gpd.GeoDataFrame,
+    pixels_per_field: int,
+    seed: int,
+) -> pd.DataFrame:
+    """Stały katalog pikseli (lon/lat) per pole — te same punkty we wszystkich scenach."""
+    rows: list[dict] = []
+    for field_row in gdf_wgs84.itertuples():
+        fid = str(field_row.field_id)
+        # Deterministyczny RNG per pole → powtarzalne piksele między uruchomieniami
+        digest = hashlib.md5(f"{fid}:{int(seed)}".encode("utf-8")).hexdigest()
+        field_seed = int(digest[:8], 16)
+        rng = np.random.default_rng(field_seed)
+        pts = _sample_points_in_polygon(field_row.geometry, pixels_per_field, rng)
+        for i, (lon, lat) in enumerate(pts):
+            rows.append(
+                {
+                    "pixel_id": f"{fid}__px{i}",
+                    "field_id": fid,
+                    "pixel_idx": i,
+                    "lon": round(float(lon), 7),
+                    "lat": round(float(lat), 7),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def extract_satellite_indices_from_tiffs(
     fields_geojson: str | Path,
     tiff_inputs: str | Path | Iterable[str | Path | tuple[str, str | Path]],
     out_path: str | Path = DEFAULT_DATA_DIR / "satellite_indices.parquet",
     id_col: str = "id",
+    pixels_per_field: int = DEFAULT_PIXELS_PER_FIELD,
+    pixel_seed: int = DEFAULT_PIXEL_SEED,
     min_valid_ratio: float = 0.5,
 ) -> pd.DataFrame:
     """
-    Wyciąga średnie NDVI i NDMI dla każdego pola z plików GeoTIFF wygenerowanych
-    przez satelite_img_downloader.ipynb (pasma NDVI/NDMI albo raw red/nir/swir16).
-    Odrzuca obserwacje z udziałem poprawnych pikseli < min_valid_ratio (zachmurzenie).
+    Wyciąga NDVI i NDMI **per piksel** (próbka stałych punktów w każdym polu)
+    z GeoTIFF-ów Sentinel-2 (pasma NDVI/NDMI albo raw red/nir/swir16).
+
+    Schemat wyjścia: pixel_id, field_id, lon, lat, date, ndvi, ndmi.
+    Zachmurzony / nodata piksel w danej dacie jest pomijany (brak wiersza).
+    `min_valid_ratio` dotyczy udziału poprawnych próbek pikseli w polu w danej scenie
+    — poniżej progu cały dzień dla pola jest odrzucany.
     """
     gdf = gpd.read_file(fields_geojson)
     if id_col and id_col in gdf.columns:
@@ -170,17 +276,19 @@ def extract_satellite_indices_from_tiffs(
         gdf["field_id"] = [f"field_{i}" for i in range(len(gdf))]
     if gdf.crs is None:
         gdf = gdf.set_crs("EPSG:4326")
+    gdf_wgs = gdf.to_crs("EPSG:4326")
+
+    pixels_per_field = max(1, int(pixels_per_field))
+    catalog = _build_pixel_catalog(gdf_wgs, pixels_per_field, pixel_seed)
+    if catalog.empty:
+        raise ValueError("Nie udało się wylosować żadnego piksela w poligonach pól.")
 
     items = _normalize_tiff_inputs(tiff_inputs)
     rows: list[dict] = []
 
     for obs_date, tif_path in items:
         with rasterio.open(tif_path) as src:
-            desc_map = {
-                (src.descriptions[i] or "").strip().lower(): i + 1
-                for i in range(src.count)
-                if src.descriptions[i]
-            }
+            desc_map = _band_index_map(src)
             has_precomputed = "ndvi" in desc_map and "ndmi" in desc_map
             has_raw = {"red", "nir", "swir16"}.issubset(desc_map)
             if not has_precomputed and not has_raw:
@@ -188,81 +296,84 @@ def extract_satellite_indices_from_tiffs(
                     f"Plik {tif_path} musi zawierać opisane pasma ('NDVI', 'NDMI') "
                     "lub ('red', 'nir', 'swir16')."
                 )
-
-            fields_crs = gdf.to_crs(src.crs)
-            raster_box = box(*src.bounds)
             band_indexes = (
                 [desc_map["ndvi"], desc_map["ndmi"]]
                 if has_precomputed
                 else [desc_map["red"], desc_map["nir"], desc_map["swir16"]]
             )
 
-            for field_row in fields_crs.itertuples():
-                geom = field_row.geometry
-                if geom is None or geom.is_empty or not geom.intersects(raster_box):
+            # Punkty katalogu → CRS rastra
+            pts_wgs = gpd.GeoDataFrame(
+                catalog,
+                geometry=[Point(xy) for xy in zip(catalog["lon"], catalog["lat"])],
+                crs="EPSG:4326",
+            ).to_crs(src.crs)
+            coords = [(float(g.x), float(g.y)) for g in pts_wgs.geometry]
+            raster_box = box(*src.bounds)
+
+            samples = list(src.sample(coords, indexes=band_indexes))
+            day_rows: list[dict] = []
+            valid_by_field: dict[str, list[bool]] = {}
+
+            for meta, geom_pt, vals in zip(catalog.itertuples(index=False), pts_wgs.geometry, samples):
+                fid = str(meta.field_id)
+                valid_by_field.setdefault(fid, [])
+                if geom_pt is None or geom_pt.is_empty or not raster_box.contains(geom_pt):
+                    valid_by_field[fid].append(False)
                     continue
-
-                try:
-                    masked, out_transform = rasterio.mask.mask(
-                        src, [geom], indexes=band_indexes, crop=True, filled=False
-                    )
-                except ValueError:
+                ndvi_val, ndmi_val = _ndvi_ndmi_from_sample(vals, has_precomputed)
+                ok = bool(np.isfinite(ndvi_val) and np.isfinite(ndmi_val))
+                valid_by_field[fid].append(ok)
+                if not ok:
                     continue
-
-                arr = np.where(masked.mask, np.nan, masked.data.astype(np.float32))
-                poly_mask = geometry_mask(
-                    [geom],
-                    out_shape=(arr.shape[1], arr.shape[2]),
-                    transform=out_transform,
-                    invert=True,
-                )
-                total_poly_px = int(poly_mask.sum())
-                if total_poly_px == 0:
-                    continue
-
-                if has_precomputed:
-                    ndvi_arr, ndmi_arr = arr[0], arr[1]
-                else:
-                    red_arr = np.where(arr[0] == 0, np.nan, arr[0])
-                    nir_arr = np.where(arr[1] == 0, np.nan, arr[1])
-                    swir_arr = np.where(arr[2] == 0, np.nan, arr[2])
-                    d_ndvi = nir_arr + red_arr
-                    d_ndmi = nir_arr + swir_arr
-                    ndvi_arr = np.where((d_ndvi != 0) & np.isfinite(d_ndvi), (nir_arr - red_arr) / d_ndvi, np.nan)
-                    ndmi_arr = np.where((d_ndmi != 0) & np.isfinite(d_ndmi), (nir_arr - swir_arr) / d_ndmi, np.nan)
-
-                valid_mask = poly_mask & np.isfinite(ndvi_arr) & np.isfinite(ndmi_arr)
-                valid_px = int(valid_mask.sum())
-                valid_ratio = valid_px / float(total_poly_px)
-                if valid_px == 0 or valid_ratio < min_valid_ratio:
-                    continue
-
-                ndvi_val = float(np.clip(np.mean(ndvi_arr[valid_mask]), -1.0, 1.0))
-                ndmi_val = float(np.clip(np.mean(ndmi_arr[valid_mask]), -1.0, 1.0))
-                rows.append(
+                day_rows.append(
                     {
-                        "field_id": field_row.field_id,
+                        "pixel_id": meta.pixel_id,
+                        "field_id": fid,
+                        "lon": float(meta.lon),
+                        "lat": float(meta.lat),
                         "date": obs_date,
                         "ndvi": round(ndvi_val, 4),
                         "ndmi": round(ndmi_val, 4),
-                        "valid_pixel_ratio": round(valid_ratio, 3),
                     }
                 )
 
-    cols = ["field_id", "date", "ndvi", "ndmi", "valid_pixel_ratio"]
+            # Odrzuć dni, w których pole jest mocno zachmurzone
+            accepted_fields = {
+                fid
+                for fid, flags in valid_by_field.items()
+                if flags and (sum(flags) / len(flags)) >= float(min_valid_ratio)
+            }
+            rows.extend(r for r in day_rows if r["field_id"] in accepted_fields)
+
+    cols = ["pixel_id", "field_id", "lon", "lat", "date", "ndvi", "ndmi"]
     out = pd.DataFrame(rows, columns=cols)
     if not out.empty:
         out = (
-            out.sort_values(["field_id", "date", "valid_pixel_ratio"])
-            .drop_duplicates(subset=["field_id", "date"], keep="last")
+            out.sort_values(["pixel_id", "date"])
+            .drop_duplicates(subset=["pixel_id", "date"], keep="last")
             .reset_index(drop=True)
         )
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(out_path, index=False)
-    print(f"[ML PREP] Zapisano satellite_indices ({len(out)} obserwacji) -> {out_path}")
+    n_px = out["pixel_id"].nunique() if not out.empty else 0
+    print(
+        f"[ML PREP] Zapisano satellite_indices per-piksel "
+        f"({len(out)} obserwacji, {n_px} pikseli, {pixels_per_field}/pole) -> {out_path}"
+    )
     return out
+
+
+def pixel_coords_from_raster(
+    transform,
+    row: int,
+    col: int,
+) -> tuple[float, float]:
+    """Środek piksela (x, y) w CRS rastra — helper do debugowania."""
+    xs, ys = transform_xy(transform, [row], [col], offset="center")
+    return float(xs[0]), float(ys[0])
 
 
 def _map_fields_to_nearest_grid(
@@ -396,6 +507,10 @@ def build_weather_table_from_open_meteo(
     """
     fields_df = pd.read_parquet(fields_master_parquet)
     om_df = pd.read_parquet(open_meteo_parquet)
+    if "sm_l3" not in om_df.columns and "sm_l2" in om_df.columns:
+        print("[INFO] Brak kolumny sm_l3 w danych Open-Meteo — podstawiam sm_l2 jako przybliżenie głębszej warstwy.")
+        om_df = om_df.copy()
+        om_df["sm_l3"] = om_df["sm_l2"]
     field_pt_df = _map_fields_to_nearest_grid(fields_df, om_df, ["lat", "lon"])
 
     merged = field_pt_df.merge(om_df, on=["lat", "lon"], how="inner")
@@ -412,15 +527,17 @@ def generate_synthetic_demo_dataset(
     out_dir: str | Path = DEFAULT_DATA_DIR / "demo",
     n_fields: int = 12,
     n_days: int = 140,
+    pixels_per_field: int = DEFAULT_PIXELS_PER_FIELD,
     seed: int = 42,
 ) -> Path:
     """
     Generuje kompletny syntetyczny zbiór treningowy (fields_master, weather_daily,
-    satellite_indices) zgodny ze schematem produkcyjnym do testów end-to-end.
+    satellite_indices per-piksel) zgodny ze schematem produkcyjnym do testów end-to-end.
     """
     rng = np.random.default_rng(seed)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    pixels_per_field = max(1, int(pixels_per_field))
 
     crops = ["pszenica", "kukurydza", "rzepak"]
     crop_codes = {"pszenica": 1110, "kukurydza": 1130, "rzepak": 1430}
@@ -473,6 +590,24 @@ def generate_synthetic_demo_dataset(
         sm2 = 0.55 * (wp + fc)
         sm3 = 0.6 * (wp + fc)
         phase = 0.0 if crop == "pszenica" else (15.0 if crop == "kukurydza" else -10.0)
+        clon, clat = f_row["centroid_lon"], f_row["centroid_lat"]
+
+        # Stałe piksele wokół centroidu (syntetyczna „siatka” w polu)
+        pixel_meta = []
+        for px_i in range(pixels_per_field):
+            dlon = float(rng.uniform(-0.0015, 0.0015))
+            dlat = float(rng.uniform(-0.0010, 0.0010))
+            bias_ndvi = float(rng.normal(0.0, 0.04))
+            bias_ndmi = float(rng.normal(0.0, 0.03))
+            pixel_meta.append(
+                {
+                    "pixel_id": f"{fid}__px{px_i}",
+                    "lon": round(clon + dlon, 7),
+                    "lat": round(clat + dlat, 7),
+                    "bias_ndvi": bias_ndvi,
+                    "bias_ndmi": bias_ndmi,
+                }
+            )
 
         for d_idx in range(n_days):
             cur_d = start_d + timedelta(days=d_idx)
@@ -503,35 +638,45 @@ def generate_synthetic_demo_dataset(
             # Nieregularne obserwacje Sentinel-2 co ~5 dni z losowym zachmurzeniem
             if d_idx % 5 == 0 and rng.random() > 0.22:
                 moisture_norm = (sm2 - wp) / max(fc - wp, 0.05)
-                ndvi = float(
+                base_ndvi = float(
                     np.clip(
-                        0.30 + 0.45 * np.exp(-((d_idx - 75 - phase) / 42.0) ** 2) + 0.08 * (moisture_norm - 0.5)
-                        + rng.normal(0, 0.015),
+                        0.30 + 0.45 * np.exp(-((d_idx - 75 - phase) / 42.0) ** 2) + 0.08 * (moisture_norm - 0.5),
                         0.05,
                         0.92,
                     )
                 )
-                ndmi = float(
+                base_ndmi = float(
                     np.clip(
-                        -0.05 + 0.35 * np.exp(-((d_idx - 70 - phase) / 40.0) ** 2) + 0.16 * (moisture_norm - 0.5)
-                        + rng.normal(0, 0.015),
+                        -0.05 + 0.35 * np.exp(-((d_idx - 70 - phase) / 40.0) ** 2) + 0.16 * (moisture_norm - 0.5),
                         -0.4,
                         0.65,
                     )
                 )
-                sat_rows.append(
-                    {
-                        "field_id": fid,
-                        "date": cur_d.isoformat(),
-                        "ndvi": round(ndvi, 4),
-                        "ndmi": round(ndmi, 4),
-                        "valid_pixel_ratio": round(float(rng.uniform(0.7, 1.0)), 3),
-                    }
-                )
+                for pm in pixel_meta:
+                    # Lekkie zachmurzenie per piksel
+                    if rng.random() < 0.08:
+                        continue
+                    ndvi = float(np.clip(base_ndvi + pm["bias_ndvi"] + rng.normal(0, 0.012), 0.05, 0.92))
+                    ndmi = float(np.clip(base_ndmi + pm["bias_ndmi"] + rng.normal(0, 0.012), -0.4, 0.65))
+                    sat_rows.append(
+                        {
+                            "pixel_id": pm["pixel_id"],
+                            "field_id": fid,
+                            "lon": pm["lon"],
+                            "lat": pm["lat"],
+                            "date": cur_d.isoformat(),
+                            "ndvi": round(ndvi, 4),
+                            "ndmi": round(ndmi, 4),
+                        }
+                    )
 
     pd.DataFrame(weather_rows).to_parquet(out_dir / "weather_daily.parquet", index=False)
     pd.DataFrame(sat_rows).to_parquet(out_dir / "satellite_indices.parquet", index=False)
-    print(f"[ML DEMO] Wygenerowano dane demo ({n_fields} pól x {n_days} dni) -> {out_dir}")
+    n_px = len({r["pixel_id"] for r in sat_rows})
+    print(
+        f"[ML DEMO] Wygenerowano dane demo ({n_fields} pól x {pixels_per_field} px "
+        f"= {n_px} pikseli, {n_days} dni) -> {out_dir}"
+    )
     return out_dir
 
 

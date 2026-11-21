@@ -71,6 +71,8 @@ STATIC_SCALE_INDICES: tuple[int, ...] = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 DEFAULT_DATA_DIR = Path("data/ml")
 DEFAULT_CHECKPOINT_PATH = Path("ml/checkpoints/vegetation_lstm.pt")
+DEFAULT_PIXELS_PER_FIELD = 32  # liczba próbek pikseli na pole przy treningu per-piksel
+DEFAULT_PIXEL_SEED = 42
 
 
 @dataclass
@@ -99,7 +101,7 @@ class TrainConfig:
     lr: float = 1e-3
     weight_decay: float = 1e-4
     val_ratio: float = 0.2
-    split_mode: Literal["field", "time"] = "field"
+    split_mode: Literal["field", "time", "pixel"] = "field"
     target_mode: Literal["observed", "interpolated"] = "observed"
     max_interp_gap_days: int = 10
     min_hist_obs: int = 2

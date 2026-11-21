@@ -1,6 +1,6 @@
 # Specyfikacja danych i modelu neuronowego (`VegetationLSTM`)
 
-Dokument opisuje strukturę katalogu `ml/`, kontrakty danych wejściowych łączących pracę całego zespołu oraz architekturę sieci neuronowej **PyTorch LSTM** prognozującej wskaźniki **NDVI** i **NDMI** na **7 dni w przód** na podstawie **8 tygodni (56 dni) historii** (zgodnie z sekcją 3 koncepcji MVP).
+Dokument opisuje strukturę katalogu `ml/`, kontrakty danych wejściowych łączących pracę całego zespołu oraz architekturę sieci neuronowej **PyTorch LSTM** prognozującej wskaźniki **NDVI** i **NDMI** na **7 dni w przód dla konkretnego piksela** na podstawie **8 tygodni (56 dni) historii** (zgodnie z sekcją 3 koncepcji MVP). Jednostka treningowa = `pixel_id` (próbka punktów w polu); pogoda i gleba pochodzą z pola nadrzędnego.
 
 ---
 
@@ -62,10 +62,10 @@ flowchart LR
 | `ml/__init__.py` | Eksport głównych klas, konfiguracji i funkcji inferencji |
 | `ml/config.py` | Stałe (`HISTORY_DAYS=56`, `FORECAST_DAYS=7`), mapowanie kodów upraw CLMS (`1110`, `1130`, `1430`), definicje kolumn i indeksów skalowania, klasy `ModelConfig` i `TrainConfig` |
 | `ml/prepare_dataset.py` | Adaptery budujące trzy kanoniczne pliki Parquet w `data/ml/` z artefaktów zespołu (`bk/`, `satelite_img_downloader.ipynb`, `kw/`, Bayer+IMERG) oraz generator danych `--demo` |
-| `ml/dataset.py` | `FeatureScaler` (czysty NumPy, dopasowywany wyłącznie na zbiorze treningowym), sklejanie osi dziennej (`build_field_daily_series`), `FieldTimeSeriesDataset` oraz `split_indices` (podział po polach lub czasie) |
+| `ml/dataset.py` | `FeatureScaler`, sklejanie osi dziennej (`build_field_daily_series`), `PixelTimeSeriesDataset` (okna per `pixel_id`) oraz `split_indices` (`field` / `pixel` / `time`) |
 | `ml/model.py` | Sieć `VegetationLSTM` (Encoder–Decoder LSTM + kondycjonowanie statyczne + połączenie rezydualne) oraz zamaskowana funkcja straty `masked_smooth_l1_loss` i metryki MAE/RMSE |
 | `ml/train.py` | Pętla treningowa z AdamW, `ReduceLROnPlateau`, obcinaniem gradientów, wyborem urządzenia (`cuda`/`mps`/`cpu`) i zapisem samowystarczalnego checkpointu `.pt` |
-| `ml/predict.py` | Wczytywanie checkpointu (`load_trained_model`) i prognoza 7-dniowa (`predict_field_7days`) w formacie gotowym dla `evaluate_field_calendar` |
+| `ml/predict.py` | `predict_pixel_7days` (NDVI/NDMI w punkcie) oraz `predict_field_7days` (średnia po pikselach pola, pod kalendarz) |
 | `ml/DATA_AND_MODEL_SPEC.md` | Niniejsza dokumentacja |
 
 ---
@@ -96,19 +96,20 @@ Pipeline treningowy oczekuje trzech znormalizowanych tabel Parquet w katalogu `d
 > [!TIP]
 > W `bk/fields_crops.geojson` część pól ma `crop_code = NaN` (np. klasy poza `ACCEPTED_CROPS` lub udział < 50%) oraz inne uprawy (np. `1120` jęczmień, `1320` burak). Domyślnie `build_fields_master(..., only_mvp_crops=False)` mapuje je na kategorię `"inne"`, dzięki czemu nie tracimy przykładów treningowych dla LSTM; ustawienie `only_mvp_crops=True` zawęża tabelę wyłącznie do pszenicy, kukurydzy i rzepaku.
 
-### 3.2. `data/ml/satellite_indices.parquet` (obserwacje Sentinel-2)
-Źródło: GeoTIFF-y wygenerowane przez `satelite_img_downloader.ipynb` (`download_clip_sentinel`, pasma `NDVI`, `NDMI`, `dtype=float32`, `nodata=np.nan`; obsługiwane są też surowe pasma `red`, `nir`, `swir16`).
+### 3.2. `data/ml/satellite_indices.parquet` (obserwacje Sentinel-2 **per piksel**)
+Źródło: GeoTIFF-y z pipeline'u satelitarnego; `extract_satellite_indices_from_tiffs` losuje `DEFAULT_PIXELS_PER_FIELD` (domyślnie 32) stałych punktów WGS84 w każdym polu i odczytuje NDVI/NDMI w tych współrzędnych we wszystkich scenach.
 
 | Kolumna | Typ | Zakres | Opis |
 |---|---|---|---|
-| `field_id` | `string` | — | ID pola zgodne z `fields_master.parquet` |
+| `pixel_id` | `string` | np. `"field_0__px3"` | Unikalny identyfikator piksela (jednostka treningu) |
+| `field_id` | `string` | — | ID pola nadrzędnego |
+| `lon`, `lat` | `float` | WGS84 | Współrzędne środka próbki |
 | `date` | `string` | `YYYY-MM-DD` | Data akwizycji sceny Sentinel-2 |
-| `ndvi` | `float` | `[-1.0, 1.0]` | Średnia strefowa w obrysie poligonu |
-| `ndmi` | `float` | `[-1.0, 1.0]` | Średnia strefowa w obrysie poligonu |
-| `valid_pixel_ratio` | `float` | `[0.0, 1.0]` | Udział pikseli skończonych (`~isnan`) wewnątrz poligonu |
+| `ndvi` | `float` | `[-1.0, 1.0]` | Wartość **w tym pikselu** |
+| `ndmi` | `float` | `[-1.0, 1.0]` | Wartość **w tym pikselu** |
 
-- Obserwacje z `valid_pixel_ratio < min_valid_ratio` (domyślnie `0.5`) są automatycznie odrzucane jako zbyt zachmurzone.
-- Funkcja `parse_date_from_filename` rozpoznaje daty `YYYY-MM-DD` (np. `wycinek_2024-06-24.tif`) i `YYYYMMDD` (np. `S2A_33UWU_20220624_0_L2A.tif`), lub można podać pary `(data, ścieżka)`.
+- Jeśli w scenie udział poprawnych próbek w polu `< min_valid_ratio` (domyślnie `0.5`), cały dzień dla pola jest odrzucany (zachmurzenie).
+- Stare pliki bez `pixel_id` (średnia pola) są nadal wczytywane przez dataset jako jeden „pseudo-piksel” `{field_id}__field_mean`.
 
 ### 3.3. `data/ml/weather_daily.parquet` (dzienna pogoda na poziomie pola)
 Źródła:
@@ -185,7 +186,9 @@ Standaryzacja (`FeatureScaler`) jest zawsze dopasowywana **wyłącznie na oknach
 ### A. Testowy trening na syntetycznych danych (`--demo`)
 ```bash
 .venv/bin/python -m ml.train --demo --epochs 5 --checkpoint ml/checkpoints/demo_lstm.pt
-.venv/bin/python -m ml.predict --checkpoint ml/checkpoints/demo_lstm.pt --data-dir data/ml/demo
+.venv/bin/python -m ml.predict --checkpoint ml/checkpoints/demo_lstm.pt --data-dir data/ml/demo --pixel-id demo_field_0__px0
+# albo najbliższy punkt:
+.venv/bin/python -m ml.predict --checkpoint ml/checkpoints/demo_lstm.pt --data-dir data/ml/demo --lon 20.80 --lat 52.60
 ```
 
 ### B. Budowa prawdziwego zbioru treningowego (przykład w Pythonie)
@@ -197,7 +200,7 @@ from ml.prepare_dataset import (
     build_weather_table_from_bayer,
 )
 from ml.train import train_model
-from ml.predict import load_trained_model, predict_field_7days
+from ml.predict import load_trained_model, predict_pixel_7days, predict_field_7days
 
 # 1. Profile glebowe dokładnie dla pól z bk/fields_crops.geojson
 prepare_all_soil_profiles(
@@ -239,6 +242,20 @@ train_model(data_dir="data/ml", checkpoint_path="ml/checkpoints/vegetation_lstm.
 model, scaler, m_cfg = load_trained_model("ml/checkpoints/vegetation_lstm.pt")
 soil = load_field_profile("field_0", "data/soil/fields_soil_profiles.parquet")
 
+# Prognoza w konkretnym pikselu
+pred_px = predict_pixel_7days(
+    model=model,
+    scaler=scaler,
+    model_cfg=m_cfg,
+    field_profile=soil,
+    crop="kukurydza",
+    satellite_df=sat_df,
+    weather_df=field_weather_df,
+    pixel_id="field_0__px0",
+    # albo: lon=20.81, lat=52.61,
+)
+
+# Średnia po pikselach pola → kalendarz
 pred = predict_field_7days(
     model=model,
     scaler=scaler,

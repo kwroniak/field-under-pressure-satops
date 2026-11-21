@@ -2,6 +2,8 @@ from .config import (
     CROP_CATEGORIES,
     DEFAULT_CHECKPOINT_PATH,
     DEFAULT_DATA_DIR,
+    DEFAULT_PIXEL_SEED,
+    DEFAULT_PIXELS_PER_FIELD,
     FORECAST_DAYS,
     FUTURE_FEATURE_NAMES,
     HIST_FEATURE_NAMES,
@@ -14,21 +16,24 @@ from .config import (
     ModelConfig,
     TrainConfig,
 )
-from .dataset import FeatureScaler, FieldTimeSeriesDataset, split_indices
+from .dataset import FeatureScaler, FieldTimeSeriesDataset, PixelTimeSeriesDataset, split_indices
 from .model import VegetationLSTM, compute_masked_metrics, masked_smooth_l1_loss
 
 
 def __getattr__(name: str):
-    if name in ("load_trained_model", "predict_field_7days"):
+    if name in ("load_trained_model", "predict_field_7days", "predict_pixel_7days"):
         from . import predict
 
         return getattr(predict, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name}")
+
 
 __all__ = [
     "CROP_CATEGORIES",
     "DEFAULT_CHECKPOINT_PATH",
     "DEFAULT_DATA_DIR",
+    "DEFAULT_PIXEL_SEED",
+    "DEFAULT_PIXELS_PER_FIELD",
     "FORECAST_DAYS",
     "FUTURE_FEATURE_NAMES",
     "HIST_FEATURE_NAMES",
@@ -42,10 +47,12 @@ __all__ = [
     "TrainConfig",
     "FeatureScaler",
     "FieldTimeSeriesDataset",
+    "PixelTimeSeriesDataset",
     "split_indices",
     "VegetationLSTM",
     "compute_masked_metrics",
     "masked_smooth_l1_loss",
     "load_trained_model",
     "predict_field_7days",
+    "predict_pixel_7days",
 ]

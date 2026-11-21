@@ -16,8 +16,8 @@ from ml.config import ModelConfig
 class VegetationLSTM(nn.Module):
     """
     Model Encoder-Decoder LSTM w PyTorch prognozujący NDVI i NDMI na 7 dni w przód
-    na podstawie 8 tygodni historii (Sentinel-2 + pogoda), 7-dniowej prognozy pogody
-    oraz statycznych cech gleby i uprawy.
+    **dla jednego piksela**, na podstawie 8 tygodni historii (Sentinel-2 + pogoda),
+    7-dniowej prognozy pogody oraz statycznych cech gleby i uprawy pola.
     """
 
     def __init__(self, config: ModelConfig):

@@ -1,0 +1,126 @@
+/* Holy Crap! — Lizmap 3.9, project override. */
+:root {
+  --hc-header: #111727;
+  --hc-rail: #101929;
+  --hc-card: #121B2A;
+  --hc-row: #1F2A3B;
+  --hc-border: #303B4B;
+  --hc-text: #E6ECF5;
+  --hc-muted: #A1A8B6;
+  --hc-accent: #A8CDB8;
+  --hc-green: #57A373;
+  --hc-panel: rgba(27,42,49,.88);
+  --hc-font: Arial, sans-serif;
+  --hc-size: 11px;
+  --hc-small: 9px;
+  --hc-title: 16px;
+  --hc-weight: 400;
+  --hc-header-height: 51px;
+  --hc-rail-width: 35px;
+  --hc-panel-width: 225px;
+  --hc-card-padding: 14px;
+  --hc-panel-padding: 9px;
+  --hc-row-height: 23px;
+  --hc-gap: 3px;
+  --hc-radius: 9px;
+  --hc-row-radius: 5px;
+  --hc-line: 1px;
+}
+html[data-holy-crap] #header,
+html[data-holy-crap] #content {font-family:var(--hc-font);font-weight:var(--hc-weight);color:var(--hc-text)}
+html[data-holy-crap] #header {height:var(--hc-header-height);min-height:0;background:var(--hc-header);border:0}
+html[data-holy-crap] #header #logo,
+html[data-holy-crap] #header #title {display:none}
+html[data-holy-crap] #header #headermenu {position:absolute;inset:0;margin:0;width:100%;height:var(--hc-header-height);background:transparent}
+html[data-holy-crap] #header #auth {height:100%;min-height:0;padding:0 14px;background:none;border:0;box-shadow:none}
+html[data-holy-crap] #auth > .pull-right {display:flex;align-items:center;justify-content:flex-end;gap:14px;width:100%;height:100%;float:none;margin:0}
+html[data-holy-crap] #headermenu .nav {margin:0;flex-shrink:0}
+html[data-holy-crap] #headermenu .nav > li > a {color:var(--hc-text);font-size:var(--hc-size);text-shadow:none;background:none}
+html[data-holy-crap] #headermenu .dropdown-menu {background:var(--hc-card);border-color:var(--hc-border)}
+html[data-holy-crap] #headermenu .dropdown-menu a {color:var(--hc-text);text-shadow:none}
+html[data-holy-crap] #nominatim-search {position:absolute;left:50%;top:11px;transform:translateX(-50%);width:267px;max-width:35vw;margin:0;height:28px}
+html[data-holy-crap] #search-query {box-sizing:border-box;position:static;width:100%;height:28px;padding:4px 30px 4px 12px;background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:14px;font:var(--hc-size) var(--hc-font);box-shadow:none}
+html[data-holy-crap] #search-query::placeholder {color:var(--hc-muted)}
+html[data-holy-crap] #nominatim-search .search-icon {right:6px;top:4px}
+/* Inline sizes are assigned by Lizmap's layout manager. */
+html[data-holy-crap] #content {top:var(--hc-header-height)!important;height:calc(100dvh - var(--hc-header-height))!important;margin-top:0}
+html[data-holy-crap] #map-content {height:100%!important}
+html[data-holy-crap] #mapmenu {width:var(--hc-rail-width);height:100%!important;background:var(--hc-rail);border:0}
+html[data-holy-crap] #mapmenu a {color:var(--hc-text);box-sizing:border-box;width:var(--hc-rail-width);min-height:35px;background-color:transparent}
+html[data-holy-crap] #mapmenu .active > a {background-color:var(--hc-row)}
+html[data-holy-crap] #docks-wrapper {left:var(--hc-rail-width)!important;max-width:calc(100% - var(--hc-rail-width));height:100%!important}
+html[data-holy-crap] #dock,
+html[data-holy-crap] #right-dock,
+html[data-holy-crap] #mini-dock {background:var(--hc-panel);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);box-shadow:none}
+html[data-holy-crap] #dock-content,
+html[data-holy-crap] #right-dock-content,
+html[data-holy-crap] #mini-dock-content {background:transparent;color:var(--hc-text);font-size:var(--hc-size)}
+html[data-holy-crap] #dock .menu-content,
+html[data-holy-crap] #mini-dock .menu-content {background:transparent;color:var(--hc-text)}
+html[data-holy-crap] #dock a,
+html[data-holy-crap] #mini-dock a {color:var(--hc-accent)}
+html[data-holy-crap] #dock h3,
+html[data-holy-crap] #dock h4,
+html[data-holy-crap] #mini-dock h3 {color:var(--hc-text);font-size:var(--hc-size);text-shadow:none}
+html[data-holy-crap] #dock .btn,
+html[data-holy-crap] #mini-dock .btn {background:var(--hc-row);color:var(--hc-text);border-color:var(--hc-border);border-radius:var(--hc-row-radius);text-shadow:none;box-shadow:none}
+html[data-holy-crap] #dock-close,
+html[data-holy-crap] #right-dock-close {z-index:2}
+html[data-holy-crap] #dock-tabs,
+html[data-holy-crap] #right-dock-tabs {border-color:var(--hc-border)}
+html[data-holy-crap] #switcher-layers-container .layer,
+html[data-holy-crap] #switcher-layers-container label {background:transparent;color:var(--hc-text)}
+html[data-holy-crap] #dock select,
+html[data-holy-crap] #dock input:not([type=checkbox]):not([type=radio]),
+html[data-holy-crap] #mini-dock select,
+html[data-holy-crap] #mini-dock input:not([type=checkbox]):not([type=radio]) {background:var(--hc-card);color:var(--hc-text);border-color:var(--hc-border);box-shadow:none}
+html[data-holy-crap] #navbar {background:var(--hc-row);border:var(--hc-line) solid var(--hc-border);box-shadow:none}
+html[data-holy-crap] #navbar button.btn {background:var(--hc-row);color:var(--hc-text);border:0;border-bottom:var(--hc-line) solid var(--hc-border);border-radius:0;box-shadow:none;text-shadow:none}
+html[data-holy-crap] #navbar button.active {background:var(--hc-card)}
+html[data-holy-crap] #overview-box,
+html[data-holy-crap] #overview-bar,
+html[data-holy-crap] #overview-box input,
+html[data-holy-crap] #overview-box select,
+html[data-holy-crap] #overview-box button {background:var(--hc-row);color:var(--hc-text);border-color:var(--hc-border);box-shadow:none;text-shadow:none}
+html[data-holy-crap] #overview-box .ol-scale-text,
+html[data-holy-crap] #overview-box .ol-scale-step-text {color:var(--hc-text)}
+html[data-holy-crap] #attribution-box {background:var(--hc-card);color:var(--hc-text);font-size:var(--hc-small)}
+html[data-holy-crap] #attribution-box a {color:var(--hc-text)}
+/* Narrow only the field panel; other GIS tools keep their native widths. */
+html[data-holy-crap] #dock:has(#popupcontent.active .hc-field-card) {width:var(--hc-panel-width)!important;min-width:0;max-width:calc(100vw - var(--hc-rail-width) - 10px)}
+html[data-holy-crap] #popupcontent .menu-content {padding:var(--hc-panel-padding)}
+html[data-holy-crap] .lizmapPopupContent:has(.hc-field-card) > h4 {display:none}
+html[data-holy-crap] .hc-field-card {box-sizing:border-box;width:100%;background:var(--hc-card);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-radius);padding:var(--hc-card-padding);font:var(--hc-size)/1.4 var(--hc-font)}
+html[data-holy-crap] .hc-field-card .hc-source {display:none}
+html[data-holy-crap] .hc-field-card .hc-heading {display:flex;justify-content:space-between;align-items:center;gap:var(--hc-gap);color:var(--hc-accent);font-size:7px;white-space:nowrap}
+html[data-holy-crap] .hc-badge {border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:2px 4px;font-size:6px}
+html[data-holy-crap] .hc-field-card h2 {font:var(--hc-weight) var(--hc-title)/1.3 var(--hc-font);margin:6px 0 10px;color:var(--hc-text)}
+html[data-holy-crap] .hc-field-card p {font-size:var(--hc-small);color:var(--hc-muted);margin:0 0 18px}
+html[data-holy-crap] .hc-days {display:grid;gap:var(--hc-gap);max-height:179px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--hc-border) var(--hc-card)}
+html[data-holy-crap] .hc-day {box-sizing:border-box;display:grid;grid-template-columns:1fr 48px 45px;align-items:center;gap:var(--hc-gap);width:100%;height:var(--hc-row-height);padding:0 5px;background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);font:10px var(--hc-font);text-align:left;cursor:pointer;box-shadow:none;text-shadow:none}
+html[data-holy-crap] .hc-day > span:last-child {text-align:right}
+html[data-holy-crap] .hc-weather {display:flex;align-items:center;gap:5px}
+html[data-holy-crap] .hc-dot {width:8px;height:8px;border-radius:50%;background:var(--hc-green);flex-shrink:0}
+html[data-holy-crap] .hc-dot.hc-missing {background:var(--hc-muted)}
+html[data-holy-crap] .hc-day:focus-visible,
+html[data-holy-crap] .hc-dialog button:focus-visible {outline:2px solid var(--hc-accent);outline-offset:-2px}
+html[data-holy-crap] .hc-empty {color:var(--hc-muted);font-size:var(--hc-small)}
+html[data-holy-crap] .hc-context {padding:10px 6px;color:var(--hc-text);font:var(--hc-size)/1.4 var(--hc-font)}
+html[data-holy-crap] .hc-context label {font:inherit;display:block;margin:0 0 4px}
+html[data-holy-crap] .hc-context select {box-sizing:border-box;width:100%;height:24px;margin:0 0 8px;font:inherit;border-radius:var(--hc-row-radius)}
+html[data-holy-crap] .hc-tags {display:flex;flex-wrap:wrap;gap:4px}
+html[data-holy-crap] .hc-tag {background:rgba(27,42,49,.88);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:2px 5px;font-size:10px}
+/* Details retain the earlier requested date-click interaction. */
+html[data-holy-crap] .hc-dialog {width:min(340px,calc(100vw - 28px));box-sizing:border-box;background:var(--hc-card);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-radius);padding:var(--hc-card-padding);font:var(--hc-size)/1.5 var(--hc-font);box-shadow:none}
+html[data-holy-crap] .hc-dialog::backdrop {background:rgba(16,25,41,.65)}
+html[data-holy-crap] .hc-dialog h2 {font:var(--hc-title) var(--hc-font);margin:0 0 14px;color:var(--hc-text)}
+html[data-holy-crap] .hc-dialog dl {display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 14px}
+html[data-holy-crap] .hc-dialog dd {margin:0;text-align:right}
+html[data-holy-crap] .hc-dialog button {background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:5px 10px;font:inherit;cursor:pointer}
+@media(max-width:767px) {
+ :root {--hc-rail-width:30px}
+ html[data-holy-crap] #nominatim-search {position:relative;left:auto;top:auto;transform:none;flex:1;max-width:267px;width:auto}
+ html[data-holy-crap] #auth > .pull-right {gap:6px}
+ html[data-holy-crap] #headermenu .nav > li > a {padding-left:6px;padding-right:6px}
+ html[data-holy-crap] #dock:has(#popupcontent.active .hc-field-card) {width:min(280px,calc(100vw - 40px))!important}
+}

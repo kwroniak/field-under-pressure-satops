@@ -1,0 +1,7 @@
+/* Preserve native header geometry before JavaScript starts. */
+body:has(#map-content) #header {background-color:#111727}
+body:has(#map-content) #header #logo {visibility:visible}
+body:has(#map-content) #header #title {visibility:hidden}
+body:has(#map-content) .liz-dialog-wait,
+body:has(#map-content) #loading {background-color:#121B2A;color:#E6ECF5;background-image:none}
+body:has(#map-content) #loading img {visibility:hidden}

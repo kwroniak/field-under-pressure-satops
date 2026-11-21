@@ -1,0 +1,48 @@
+<div class="hc-field-card">
+  <div class="hc-heading"><span>MONITORING POLA</span><span class="hc-badge">[% CASE WHEN get_feature('field_profile', 'field_id', "id") IS NULL THEN 'POZA ANALIZĄ (&lt; 3 ha)' ELSE 'STAN OD ' || format_date(attribute(get_feature('field_profile', 'field_id', "id"), 'as_of'), 'dd.MM.yyyy') END %]</span></div>
+  <h2>Pole <span class="hc-field-id">[% "id" %]</span> ([% format_number(area(transform($geometry, 'EPSG:3857', 'EPSG:2180')) / 10000, 2) %] ha)</h2>
+  <p>Ocena warunków nawożenia i nawadniania: pogoda, gleba, uprawa</p>
+  <table class="hc-source" style="display:none"><tbody>
+[% aggregate(
+      layer := 'field_calendar',
+      aggregate := 'concatenate',
+      expression := concat(
+          '<tr><td>', format_date("day", 'yyyy-MM-dd'),
+          '</td><td>', coalesce(to_string("ndvi"), ''),
+          '</td><td>', coalesce(to_string("ndmi"), ''),
+          '</td><td>', coalesce(to_string(attribute(get_feature('field_profile', 'field_id', "field_id"), 'ph')), ''),
+          '</td><td>', coalesce(to_string("temp_mean_c"), ''),
+          '</td><td>', coalesce(to_string("precip_24h_mm"), ''),
+          '</td><td>', "fertilizer",
+          '</td><td>', "status",
+          '</td><td>', replace(coalesce("fert_reasons", ''), '<', '&lt;'),
+          '</td><td>', coalesce("irrigation_risk", ''),
+          '</td><td>', replace(coalesce("irrigation_reasons", ''), '<', '&lt;'),
+          '</td></tr>'
+      ),
+      filter := "field_id" = attribute(@parent, 'id'),
+      concatenator := '',
+      order_by := concat(format_date("day", 'yyyy-MM-dd'), "fertilizer")
+  ) %]
+  </tbody></table>
+  <div class="hc-days"></div>
+</div>
+<div class="hc-context">
+  <label>Uprawa
+    <select aria-label="Uprawa" disabled><option>[% coalesce(attribute(get_feature('field_profile', 'field_id', "id"), 'crop'), "crop_type", '—') %]</option></select>
+  </label>
+  <label>Nawóz
+    <select class="fc-fertilizer" aria-label="Nawóz">
+      <option value="saletra_amonowa">Saletra amonowa (34% N)</option>
+      <option value="mocznik_inhibitor">Mocznik z inhibitorem (46% N)</option>
+      <option value="rsm_32">RSM 32</option>
+      <option value="saletrosan_26">Saletrosan 26 (26% N + 13% S)</option>
+    </select>
+  </label>
+  <div class="hc-tags">
+    <span class="hc-tag">Tekstura: [% coalesce(attribute(get_feature('field_profile', 'field_id', "id"), 'texture'), '—') %]</span>
+    <span class="hc-tag">pH: [% coalesce(format_number(attribute(get_feature('field_profile', 'field_id', "id"), 'ph'), 1), '—') %]</span>
+    <span class="hc-tag">Klasa: [% coalesce(attribute(get_feature('field_profile', 'field_id', "id"), 'klasa_bonitacyjna'), '—') %]</span>
+    <span class="hc-tag">Przepuszczalność: [% coalesce(attribute(get_feature('field_profile', 'field_id', "id"), 'permeability'), '—') %]</span>
+  </div>
+</div>

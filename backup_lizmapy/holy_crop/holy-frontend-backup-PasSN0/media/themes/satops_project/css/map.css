@@ -1,0 +1,278 @@
+/* No geometry overrides for the map, its viewport or docks. */
+:root {
+  --hc-header:#111727; --hc-rail:#101929; --hc-card:#121B2A;
+  --hc-row:#1F2A3B; --hc-border:#303B4B; --hc-text:#E6ECF5;
+  --hc-muted:#A1A8B6; --hc-accent:#A8CDB8; --hc-green:#57A373;
+  --hc-panel:rgba(27,42,49,.88); --hc-font:Arial,sans-serif;
+  --hc-size:11px; --hc-small:9px; --hc-title:16px;
+  --hc-radius:8px; --hc-row-radius:5px; --hc-gap:3px; --hc-padding:10px;
+}
+/* Colors override the older global theme's important declarations. */
+body #mapmenu {background-color:var(--hc-rail)!important}
+body #dock, body #right-dock, body #mini-dock {
+  background-color:var(--hc-panel)!important;color:var(--hc-text)!important;
+  border-color:var(--hc-border);box-shadow:none;
+}
+body #dock-content, body #right-dock-content, body #mini-dock-content,
+body #dock .menu-content, body #right-dock .menu-content {
+  background-color:transparent!important;color:var(--hc-text)!important;
+}
+body #dock h3, body #dock h4, body #dock .dock-title,
+body #dock-tabs a, body #right-dock-tabs a,
+body #switcher-layers-container .node label,
+body #switcher-layers-container .node label span {
+  color:var(--hc-text)!important;font-family:var(--hc-font);font-style:normal;text-shadow:none;
+}
+body #dock .btn, body #right-dock .btn {
+  background-color:var(--hc-row)!important;color:var(--hc-text)!important;
+  border-color:var(--hc-border);box-shadow:none;text-shadow:none;border-radius:var(--hc-row-radius);
+}
+body #dock select, body #dock input:not([type=checkbox]):not([type=radio]),
+body #baselayer-select-input, body #baselayer-select-input option {
+  background-color:var(--hc-card)!important;color:var(--hc-text)!important;
+  border-color:var(--hc-border);box-shadow:none;
+}
+/* Header contents only; the header keeps its original height. */
+body #header #headermenu {
+  position:absolute;inset:0;width:auto;height:auto;margin:0;background-color:transparent;
+}
+body #header #auth {
+  height:100%;min-height:0;padding:0 12px;background:none;border:0;box-shadow:none;
+}
+body #headermenu #auth > .pull-right {
+  position:static;display:flex;align-items:center;justify-content:flex-end;
+  float:none;width:100%;height:100%;gap:12px;
+}
+body #headermenu .nav {margin:0}
+body #headermenu .nav > li > a {
+  color:var(--hc-text)!important;font:var(--hc-size)/20px var(--hc-font);text-shadow:none;
+}
+body #headermenu #nominatim-search {
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:267px;max-width:40vw;margin:0;height:28px;
+}
+body #headermenu #search-query {
+  box-sizing:border-box;width:100%;height:28px;margin:0;padding:4px 30px 4px 12px;
+  background-color:var(--hc-row);color:var(--hc-text);border:1px solid var(--hc-border);
+  border-radius:14px;box-shadow:none;font:var(--hc-size)/18px var(--hc-font);
+}
+body #search-query::placeholder {color:var(--hc-muted)}
+body #nominatim-search .search-icon {position:absolute;right:4px;top:0;height:28px}
+body #nominatim-search .nav-search {width:28px;height:28px}
+body #headermenu .dropdown-menu {background-color:var(--hc-card);border-color:var(--hc-border)}
+body #headermenu .dropdown-menu a {color:var(--hc-text)!important;text-shadow:none}
+/* SVGs are DOM children: no URL passes through Lizmap's CSS URL rewriting. */
+body .hc-icon-button {
+  display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+  background-image:none!important;color:var(--hc-text)!important;
+  font-size:0!important;text-shadow:none!important;
+}
+body .hc-icon-button::before, body .hc-icon-button::after {content:none!important}
+body .hc-icon-button > :not(.hc-icon) {display:none}
+body .hc-icon-button > svg.hc-icon {
+  position:static;transform:none;flex:0 0 18px;float:none;margin:0;
+  display:block;visibility:visible;width:18px;height:18px;pointer-events:none;
+  color:var(--hc-text)!important;fill:none;stroke:currentColor;stroke-width:1.5;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+body #navbar {background-color:var(--hc-row);border-color:var(--hc-border)}
+body #navbar button.btn {
+  background-color:var(--hc-row)!important;border-color:var(--hc-border);
+  border-radius:0;box-shadow:none;
+}
+body #navbar button.btn.active {background-color:var(--hc-card)!important}
+body #overview-box, body #overview-bar,
+body #overview-box input, body #overview-box select, body #overview-box button {
+  background-color:var(--hc-row);color:var(--hc-text);border-color:var(--hc-border);
+}
+body #overview-box * {text-shadow:none!important;box-shadow:none!important}
+body #overview-box .ol-scale-text, body #overview-box .ol-scale-step-text {
+  color:var(--hc-text)!important;font:10px/12px var(--hc-font);
+}
+/* Only ancestors of the supplied field card receive hc-popup-wrap. */
+body #popupcontent .hc-popup-wrap {
+  box-sizing:border-box;background-color:transparent!important;border:0!important;
+  padding:0!important;margin:0!important;width:auto!important;max-width:100%;box-shadow:none;
+}
+body #popupcontent .menu-content:has(.hc-field-card) {padding:8px;background-color:transparent!important}
+body #popupcontent .hc-field-card {
+  box-sizing:border-box;width:100%;min-width:0;padding:var(--hc-padding);
+  background-color:var(--hc-card)!important;color:var(--hc-text)!important;
+  border:1px solid var(--hc-border);border-radius:var(--hc-radius);
+  font:var(--hc-size)/1.4 var(--hc-font);
+}
+body #popupcontent .hc-field-card .hc-source {display:none}
+body #popupcontent .hc-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:var(--hc-gap);white-space:nowrap;
+}
+body #popupcontent .hc-heading span {color:var(--hc-accent)!important;font:6px/12px var(--hc-font)}
+body #popupcontent .hc-badge {padding:1px 3px;border:1px solid var(--hc-border);border-radius:4px}
+body #popupcontent .hc-field-card h2,
+body #popupcontent .hc-field-card h2 span {
+  color:var(--hc-text)!important;font:400 var(--hc-title)/22px var(--hc-font);
+}
+body #popupcontent .hc-field-card h2 {margin:6px 0 10px}
+body #popupcontent .hc-field-card p {margin:0 0 14px;color:var(--hc-muted)!important;font:var(--hc-small)/14px var(--hc-font)}
+body #popupcontent .hc-days {
+  display:flex;flex-direction:column;gap:var(--hc-gap);max-height:179px;
+  overflow-y:auto;overflow-x:hidden;margin:0;padding:0;scrollbar-width:thin;
+  scrollbar-color:var(--hc-border) var(--hc-card);
+}
+body #popupcontent button.hc-day {
+  box-sizing:border-box;display:grid;grid-template-columns:minmax(50px,1fr) 46px 43px;
+  align-items:center;gap:var(--hc-gap);flex:0 0 23px;width:100%;height:23px;min-height:23px;
+  margin:0;padding:0 4px;border:1px solid var(--hc-border);border-radius:var(--hc-row-radius);
+  background-color:var(--hc-row);background-image:none;color:var(--hc-text)!important;
+  font:400 10px/21px var(--hc-font);text-align:left;white-space:nowrap;
+  cursor:pointer;box-shadow:none;text-shadow:none;
+}
+body #popupcontent .hc-day span {
+  min-width:0;margin:0;padding:0;color:var(--hc-text)!important;font:400 10px/21px var(--hc-font);white-space:nowrap;
+}
+body #popupcontent .hc-day > span:last-child {text-align:right}
+body #popupcontent .hc-weather {display:flex;align-items:center;gap:3px}
+body #popupcontent .hc-dot {flex:0 0 6px;width:6px;height:6px;border-radius:50%;background-color:var(--hc-green)}
+body #popupcontent .hc-dot.hc-missing {background-color:var(--hc-muted)}
+body #popupcontent .hc-context {padding:10px 3px;background-color:transparent!important}
+body #popupcontent .hc-context label {display:block;margin:0 0 7px;color:var(--hc-text)!important;font:var(--hc-size)/18px var(--hc-font)}
+body #popupcontent .hc-context select {box-sizing:border-box;width:100%;height:25px;margin:2px 0 0;padding:2px 5px;opacity:1;font:var(--hc-size) var(--hc-font)}
+body #popupcontent .hc-tags {display:flex;flex-wrap:wrap;gap:4px}
+body #popupcontent .hc-tag {padding:2px 5px;border:1px solid var(--hc-border);border-radius:var(--hc-row-radius);background-color:var(--hc-card);color:var(--hc-text)!important;font:10px/14px var(--hc-font)}
+body dialog.hc-dialog {
+  box-sizing:border-box;width:min(340px,calc(100vw - 28px));padding:16px;
+  background-color:var(--hc-card);color:var(--hc-text);border:1px solid var(--hc-border);
+  border-radius:var(--hc-radius);font:12px/18px var(--hc-font);
+}
+body dialog.hc-dialog::backdrop {background-color:rgba(16,25,41,.5)}
+body dialog.hc-dialog h2 {margin:0 0 14px;color:var(--hc-text);font:var(--hc-title)/22px var(--hc-font)}
+body dialog.hc-dialog dl {display:grid;grid-template-columns:1fr 1fr;gap:6px}
+body dialog.hc-dialog dd {margin:0;text-align:right}
+body dialog.hc-dialog button {padding:5px 10px;background-color:var(--hc-row);color:var(--hc-text);border:1px solid var(--hc-border);border-radius:var(--hc-row-radius)}
+body .hc-day:focus-visible, body .hc-dialog button:focus-visible {outline:2px solid var(--hc-accent);outline-offset:-2px}
+body #lizmap-project-warnings {display:none}
+@media(max-width:700px) {
+  body #headermenu #nominatim-search {position:relative;left:auto;top:auto;transform:none;flex:1;min-width:80px;max-width:267px;width:auto}
+  body #headermenu #auth > .pull-right {gap:6px}
+  body #headermenu .nav > li > a {padding-left:5px;padding-right:5px}
+}
+/* Center within the existing button box, without a positioning override. */
+body #navbar > button.hc-icon-button {display:flex;padding:0}
+body #mapmenu a.hc-icon-button {display:flex}
+body #dock .hc-icon-button, body #right-dock .hc-icon-button,
+body #mini-dock .hc-icon-button {box-sizing:border-box}
+/* Bootstrap sprite icons on dark controls, including back arrows. */
+body :is(#dock,#right-dock,#mini-dock,#headermenu,#overview-box) .btn :is([class^="icon-"],[class*=" icon-"]):not(.hc-glyph),
+body #headermenu .icon {filter:brightness(0) invert(1)}
+body :is(#dock,#right-dock,#mini-dock) .hc-glyph {
+  display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+  width:14px;height:14px;background-image:none!important;filter:none;color:var(--hc-text)!important;
+}
+body .hc-glyph > svg {
+  width:14px;height:14px;display:block;pointer-events:none;
+  fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+}
+/* Popups and empty-state labels use the same dark surface. */
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent,
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent.noContent {
+  color:var(--hc-text)!important;border-color:var(--hc-border)!important;text-shadow:none;
+}
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent:not(:has(.hc-field-card)) {
+  background-color:var(--hc-card)!important;
+}
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent :is(p,div,span,label,td,th):not(.hc-field-card):not(.hc-field-card *) {
+  color:var(--hc-text)!important;text-shadow:none;
+}
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupTitle,
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupTitle * {
+  color:var(--hc-text)!important;background-color:transparent!important;text-shadow:none;
+}
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent table:not(.hc-source) {
+  background-color:var(--hc-card)!important;border-color:var(--hc-border)!important;
+}
+body :is(#dock,#right-dock,#mini-dock) .lizmapPopupContent :is(td,th) {
+  background-color:var(--hc-row)!important;border-color:var(--hc-border)!important;color:var(--hc-text)!important;
+}
+body #dock-content #metadata .menu-content,
+body #dock-content #metadata .menu-content :is(p,div,span,li,dt,dd,h3,h4,label) {color:var(--hc-text)!important}
+body #dock-content #metadata .menu-content a,
+body #dock .lizmapPopupContent a:not(.btn) {color:var(--hc-accent)!important}
+/* Keep active, hovered and focused controls on dark backgrounds. */
+body #mapmenu .nav-list > li > a {background-color:var(--hc-rail)!important;color:var(--hc-text)!important;border-color:var(--hc-border)!important}
+body #mapmenu .nav-list > li.active > a,
+body #mapmenu .nav-list > li > a:is(:hover,:focus) {background-color:var(--hc-row)!important;color:var(--hc-text)!important}
+body :is(#dock-tabs,#right-dock-tabs) {border-color:var(--hc-border)!important}
+body :is(#dock-tabs,#right-dock-tabs) > li > a {color:var(--hc-muted)!important;background-color:var(--hc-card)!important;border-color:var(--hc-border)!important;text-shadow:none}
+body :is(#dock-tabs,#right-dock-tabs) > li.active > a,
+body :is(#dock-tabs,#right-dock-tabs) > li > a:is(:hover,:focus) {color:var(--hc-text)!important;background-color:var(--hc-row)!important;border-color:var(--hc-border)!important}
+body :is(#dock,#right-dock,#mini-dock,#navbar,#overview-box) .btn:is(:hover,:focus,:active,.active) {
+  background-color:var(--hc-row)!important;background-image:none!important;
+  color:var(--hc-text)!important;border-color:var(--hc-accent)!important;box-shadow:none;text-shadow:none;
+}
+body :is(#dock,#right-dock,#mini-dock,#mapmenu,#headermenu,#navbar,#overview-box) :is(a,button):focus-visible {
+  outline:2px solid var(--hc-accent);outline-offset:-2px;
+}
+/* Alternating scale segments remain distinguishable on the dark panel. */
+body #overview-box, body #overview-bar, body #overview-box .mouse-position,
+body #overview-box .coords-unit, body #overview-box .editable-position,
+body #overview-box .ol-scale-bar, body #overview-box .ol-scale-bar-inner {
+  background-color:var(--hc-row)!important;color:var(--hc-text)!important;border-color:var(--hc-border)!important;
+}
+body #overview-box :is(input,select,option,button) {
+  background-color:var(--hc-card)!important;color:var(--hc-text)!important;border-color:var(--hc-border)!important;
+}
+body #overview-box :is(.ol-scale-text,.ol-scale-step-text) {background-color:transparent!important;color:var(--hc-text)!important}
+body #overview-box .ol-scale-singlebar {border-color:var(--hc-muted)!important}
+body #overview-box .ol-scale-singlebar-odd {background-color:var(--hc-muted)!important}
+body #overview-box .ol-scale-singlebar-even {background-color:var(--hc-row)!important}
+body #overview-box .ol-scale-step-marker {background-color:var(--hc-muted)!important;border-color:var(--hc-muted)!important}
+body #overview-box .mouse-position > button.hc-icon-button {padding:2px;min-width:24px;min-height:24px}
+/* Header account keeps its original menu and authenticated user label. */
+body #header #logo {visibility:visible}
+body #headermenu #info-user {
+  display:inline-flex;align-items:center;gap:6px;padding:4px 8px;
+  border:1px solid var(--hc-border);border-radius:18px;background-color:var(--hc-row)!important;
+}
+body #headermenu #info-user .text,
+body #headermenu #info-user .text span,
+body #headermenu .dashboard-item .text {color:var(--hc-text)!important;text-shadow:none}
+body #headermenu #info-user.hc-has-avatar > .icon {display:none}
+body #headermenu #info-user .hc-avatar {
+  flex:0 0 26px;display:block;width:26px;height:26px;object-fit:cover;
+  border-radius:50%;border:1px solid var(--hc-border);
+}
+body #headermenu .dropdown-toggle:is(:hover,:focus),
+body #headermenu .open > .dropdown-toggle {
+  background-color:var(--hc-row)!important;color:var(--hc-text)!important;background-image:none!important;box-shadow:none;
+}
+body #headermenu .dropdown-menu {background-color:var(--hc-card)!important;border-color:var(--hc-border)!important}
+body #headermenu .dropdown-menu > li > a {background-color:transparent!important;color:var(--hc-text)!important;background-image:none!important}
+body #headermenu .dropdown-menu > li > a:is(:hover,:focus),
+body #headermenu .dropdown-menu > li.active > a {background-color:var(--hc-row)!important;color:var(--hc-text)!important}
+body #headermenu .caret {border-top-color:var(--hc-muted)!important;border-bottom-color:var(--hc-muted)!important;opacity:1}
+/* One icon per rail slot, centered in the native rail width. */
+body #mapmenu .nav-list > li > a.hc-icon-button {
+ display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+ width:100%;height:36px;min-height:36px;padding:0;margin:0;
+ background-image:none!important;text-indent:0;border-radius:0;
+}
+body #mapmenu .nav-list > li > a.hc-icon-button > :not(svg.hc-icon) {display:none!important}
+body #mapmenu .nav-list > li > a.hc-icon-button::before,
+body #mapmenu .nav-list > li > a.hc-icon-button::after {content:none!important;background-image:none!important}
+body #mapmenu .nav-list > li > a.hc-icon-button svg.hc-icon {position:static!important;transform:none!important;margin:0!important;flex:0 0 18px}
+body #dock-tabs [class*="icon-"], body #nav-tab-metadata .icon {filter:brightness(0) invert(1)}
+body #headermenu #auth > .pull-right {align-items:center}
+body #headermenu .nav {display:flex;align-items:center;height:100%}
+body #headermenu .nav > li {float:none;display:flex;align-items:center}
+body #headermenu .dashboard-item > a {display:flex;align-items:center;gap:5px}
+body #nominatim-search #header-clear {position:absolute;right:30px;top:0;margin:0;width:28px;height:28px;padding:0}
+body #nominatim-search .search-icon {right:0;top:0;margin:0;width:28px;height:28px}
+body #headermenu #search-query {padding-right:60px}
+body #popupcontent .hc-field-card {border-radius:4px}
+body #popupcontent .hc-heading {flex-wrap:wrap;gap:4px}
+body #popupcontent .hc-heading span {font-size:8px}
+body #popupcontent .hc-days {max-height:216px;gap:0}
+body #popupcontent button.hc-day {height:30px;min-height:30px;flex-basis:30px;border-radius:0;border:0;border-bottom:1px solid var(--hc-border);background-color:transparent}
+body #popupcontent button.hc-day:hover {background-color:var(--hc-row)}
+#nominatim-search #header-clear {
+    display: none !important;
+}

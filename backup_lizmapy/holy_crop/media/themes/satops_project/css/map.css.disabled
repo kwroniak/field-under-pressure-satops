@@ -1,0 +1,181 @@
+/* Holy Crap! — Lizmap 3.9, project override. */
+:root {
+  --hc-header: #111727;
+  --hc-rail: #101929;
+  --hc-card: #121B2A;
+  --hc-row: #1F2A3B;
+  --hc-border: #303B4B;
+  --hc-text: #E6ECF5;
+  --hc-muted: #A1A8B6;
+  --hc-accent: #A8CDB8;
+  --hc-green: #57A373;
+  --hc-panel: rgba(27,42,49,.88);
+  --hc-font: Arial, sans-serif;
+  --hc-size: 11px;
+  --hc-small: 9px;
+  --hc-title: 16px;
+  --hc-weight: 400;
+  --hc-header-height: 51px;
+  --hc-rail-width: 35px;
+  --hc-panel-width: 225px;
+  --hc-card-padding: 14px;
+  --hc-panel-padding: 9px;
+  --hc-row-height: 23px;
+  --hc-gap: 3px;
+  --hc-radius: 9px;
+  --hc-row-radius: 5px;
+  --hc-line: 1px;
+}
+html:has(#map-content) #header {height:var(--hc-header-height);min-height:0;background:var(--hc-header);border:0}
+html:has(#map-content) #header #logo,
+html:has(#map-content) #header #title {display:none}
+html:has(#map-content) #header #headermenu {position:absolute;inset:0;margin:0;width:100%;height:var(--hc-header-height);background:transparent}
+html:has(#map-content) #header #auth {height:100%;min-height:0;padding:0 14px;background:none;border:0;box-shadow:none}
+html:has(#map-content) #auth > .pull-right {display:flex;align-items:center;justify-content:flex-end;gap:14px;width:100%;height:100%;float:none;margin:0}
+html:has(#map-content) #headermenu .nav {margin:0;flex-shrink:0}
+html:has(#map-content) #headermenu .nav > li > a {color:var(--hc-text);font-size:var(--hc-size);text-shadow:none;background:none}
+html:has(#map-content) #headermenu .dropdown-menu {background:var(--hc-card);border-color:var(--hc-border)}
+html:has(#map-content) #headermenu .dropdown-menu a {color:var(--hc-text);text-shadow:none}
+html:has(#map-content) #nominatim-search {position:absolute;left:50%;top:11px;transform:translateX(-50%);width:267px;max-width:35vw;margin:0;height:28px}
+html:has(#map-content) #search-query {box-sizing:border-box;position:static;width:100%;height:28px;padding:4px 30px 4px 12px;background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:14px;font:var(--hc-size) var(--hc-font);box-shadow:none}
+html:has(#map-content) #search-query::placeholder {color:var(--hc-muted)}
+html:has(#map-content) #nominatim-search .search-icon {right:6px;top:4px}
+/* Inline sizes are assigned by Lizmap's layout manager. */
+html:has(#map-content) #mapmenu a {color:var(--hc-text);box-sizing:border-box;width:var(--hc-rail-width);min-height:35px;background-color:transparent}
+html:has(#map-content) #mapmenu .active > a {background-color:var(--hc-row)}
+html:has(#map-content) #dock,
+html:has(#map-content) #right-dock,
+html:has(#map-content) #mini-dock {background:var(--hc-panel);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);box-shadow:none}
+html:has(#map-content) #dock-content,
+html:has(#map-content) #right-dock-content,
+html:has(#map-content) #mini-dock-content {background:transparent;color:var(--hc-text);font-size:var(--hc-size)}
+html:has(#map-content) #dock .menu-content,
+html:has(#map-content) #mini-dock .menu-content {background:transparent;color:var(--hc-text)}
+html:has(#map-content) #dock a,
+html:has(#map-content) #mini-dock a {color:var(--hc-accent)}
+html:has(#map-content) #dock h3,
+html:has(#map-content) #dock h4,
+html:has(#map-content) #mini-dock h3 {color:var(--hc-text);font-size:var(--hc-size);text-shadow:none}
+html:has(#map-content) #dock .btn,
+html:has(#map-content) #mini-dock .btn {background:var(--hc-row);color:var(--hc-text);border-color:var(--hc-border);border-radius:var(--hc-row-radius);text-shadow:none;box-shadow:none}
+html:has(#map-content) #dock-close,
+html:has(#map-content) #right-dock-close {z-index:2}
+html:has(#map-content) #dock-tabs,
+html:has(#map-content) #right-dock-tabs {border-color:var(--hc-border)}
+html:has(#map-content) #switcher-layers-container .layer,
+html:has(#map-content) #switcher-layers-container label {background:transparent;color:var(--hc-text)}
+html:has(#map-content) #dock select,
+html:has(#map-content) #dock input:not([type=checkbox]):not([type=radio]),
+html:has(#map-content) #mini-dock select,
+html:has(#map-content) #mini-dock input:not([type=checkbox]):not([type=radio]) {background:var(--hc-card);color:var(--hc-text);border-color:var(--hc-border);box-shadow:none}
+html:has(#map-content) #navbar {background:var(--hc-row);border:var(--hc-line) solid var(--hc-border);box-shadow:none}
+html:has(#map-content) #navbar button.btn {background:var(--hc-row);color:var(--hc-text);border:0;border-bottom:var(--hc-line) solid var(--hc-border);border-radius:0;box-shadow:none;text-shadow:none}
+html:has(#map-content) #navbar button.active {background:var(--hc-card)}
+html:has(#map-content) #overview-box,
+html:has(#map-content) #overview-bar,
+html:has(#map-content) #overview-box input,
+html:has(#map-content) #overview-box select,
+html:has(#map-content) #overview-box button {background:var(--hc-row);color:var(--hc-text);border-color:var(--hc-border);box-shadow:none;text-shadow:none}
+html:has(#map-content) #overview-box .ol-scale-text,
+html:has(#map-content) #overview-box .ol-scale-step-text {color:var(--hc-text)}
+html:has(#map-content) #attribution-box {background:var(--hc-card);color:var(--hc-text);font-size:var(--hc-small)}
+html:has(#map-content) #attribution-box a {color:var(--hc-text)}
+/* Narrow only the field panel; other GIS tools keep their native widths. */
+html:has(#map-content) #popupcontent .menu-content {padding:var(--hc-panel-padding)}
+html:has(#map-content) .lizmapPopupContent:has(.hc-field-card) > h4 {display:none}
+html:has(#map-content) .hc-field-card {box-sizing:border-box;width:100%;background:var(--hc-card);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-radius);padding:var(--hc-card-padding);font:var(--hc-size)/1.4 var(--hc-font)}
+html:has(#map-content) .hc-field-card .hc-source {display:none}
+html:has(#map-content) .hc-field-card .hc-heading {display:flex;justify-content:space-between;align-items:center;gap:var(--hc-gap);color:var(--hc-accent);font-size:7px;white-space:nowrap}
+html:has(#map-content) .hc-badge {border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:2px 4px;font-size:6px}
+html:has(#map-content) .hc-field-card h2 {font:var(--hc-weight) var(--hc-title)/1.3 var(--hc-font);margin:6px 0 10px;color:var(--hc-text)}
+html:has(#map-content) .hc-field-card p {font-size:var(--hc-small);color:var(--hc-muted);margin:0 0 18px}
+html:has(#map-content) .hc-days {display:grid;gap:var(--hc-gap);max-height:179px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--hc-border) var(--hc-card)}
+html:has(#map-content) .hc-day {box-sizing:border-box;display:grid;grid-template-columns:1fr 48px 45px;align-items:center;gap:var(--hc-gap);width:100%;height:var(--hc-row-height);padding:0 5px;background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);font:10px var(--hc-font);text-align:left;cursor:pointer;box-shadow:none;text-shadow:none}
+html:has(#map-content) .hc-day > span:last-child {text-align:right}
+html:has(#map-content) .hc-weather {display:flex;align-items:center;gap:5px}
+html:has(#map-content) .hc-dot {width:8px;height:8px;border-radius:50%;background:var(--hc-green);flex-shrink:0}
+html:has(#map-content) .hc-dot.hc-missing {background:var(--hc-muted)}
+html:has(#map-content) .hc-day:focus-visible,
+html:has(#map-content) .hc-dialog button:focus-visible {outline:2px solid var(--hc-accent);outline-offset:-2px}
+html:has(#map-content) .hc-empty {color:var(--hc-muted);font-size:var(--hc-small)}
+html:has(#map-content) .hc-context {padding:10px 6px;color:var(--hc-text);font:var(--hc-size)/1.4 var(--hc-font)}
+html:has(#map-content) .hc-context label {font:inherit;display:block;margin:0 0 4px}
+html:has(#map-content) .hc-context select {box-sizing:border-box;width:100%;height:24px;margin:0 0 8px;font:inherit;border-radius:var(--hc-row-radius)}
+html:has(#map-content) .hc-tags {display:flex;flex-wrap:wrap;gap:4px}
+html:has(#map-content) .hc-tag {background:rgba(27,42,49,.88);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:2px 5px;font-size:10px}
+/* Details retain the earlier requested date-click interaction. */
+html:has(#map-content) .hc-dialog {width:min(340px,calc(100vw - 28px));box-sizing:border-box;background:var(--hc-card);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-radius);padding:var(--hc-card-padding);font:var(--hc-size)/1.5 var(--hc-font);box-shadow:none}
+html:has(#map-content) .hc-dialog::backdrop {background:rgba(16,25,41,.65)}
+html:has(#map-content) .hc-dialog h2 {font:var(--hc-title) var(--hc-font);margin:0 0 14px;color:var(--hc-text)}
+html:has(#map-content) .hc-dialog dl {display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 14px}
+html:has(#map-content) .hc-dialog dd {margin:0;text-align:right}
+html:has(#map-content) .hc-dialog button {background:var(--hc-row);color:var(--hc-text);border:var(--hc-line) solid var(--hc-border);border-radius:var(--hc-row-radius);padding:5px 10px;font:inherit;cursor:pointer}
+@media(max-width:767px) {
+ :root {--hc-rail-width:30px}
+ html:has(#map-content) #nominatim-search {position:relative;left:auto;top:auto;transform:none;flex:1;max-width:267px;width:auto}
+ html:has(#map-content) #auth > .pull-right {gap:6px}
+ html:has(#map-content) #headermenu .nav > li > a {padding-left:6px;padding-right:6px}
+}
+/* V2: viewport, not an offset on top of Lizmap's body padding. */
+html:has(#map-content), html:has(#map-content) body {margin:0;padding:0;overflow:hidden}
+html:has(#map-content) #content {position:fixed!important;inset:var(--hc-header-height) 0 0!important;width:100%!important;height:auto!important;margin:0;padding:0;overflow:hidden}
+html:has(#map-content) #map-content {position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0;padding:0}
+html:has(#map-content) #mapmenu {position:absolute;top:0;bottom:0;left:0;width:var(--hc-rail-width);height:100%!important;background:var(--hc-rail)}
+html:has(#map-content) #docks-wrapper {top:0!important;bottom:0;left:var(--hc-rail-width)!important;height:100%!important;max-width:calc(100% - var(--hc-rail-width))}
+html:has(#map-content) #dock:has(.hc-field-card) {box-sizing:border-box;width:260px!important;min-width:0;max-width:calc(100vw - var(--hc-rail-width));padding:0;background:var(--hc-panel)}
+html:has(#map-content) #dock-content {padding:8px;box-sizing:border-box}
+html:has(#map-content) #popupcontent .hc-popup-wrap {box-sizing:border-box;width:100%!important;min-width:0!important;max-width:100%!important;background:transparent!important;padding:0!important;margin:0!important;border:0!important;box-shadow:none}
+html:has(#map-content) #popupcontent .lizmapPopupContent > h4 {display:none}
+html:has(#map-content) #popupcontent .menu-content {padding:0;background:transparent}
+html:has(#map-content) #popupcontent .hc-field-card {box-sizing:border-box;width:100%;min-width:0;padding:12px;background:var(--hc-card)}
+html:has(#map-content) .hc-field-card h2 {font-size:16px;white-space:nowrap;line-height:22px;font-weight:400}
+html:has(#map-content) .hc-days {display:flex;flex-direction:column;gap:3px;height:179px;max-height:179px;overflow-y:auto;overflow-x:hidden;padding:0;margin:0}
+html:has(#map-content) .hc-day {display:grid;grid-template-columns:minmax(65px,1fr) 54px 47px;flex:0 0 23px;min-height:23px;height:23px;line-height:21px;padding:0 5px;margin:0;font-size:10px;font-weight:400;white-space:nowrap}
+html:has(#map-content) .hc-day span {min-width:0;white-space:nowrap;line-height:21px;font-size:10px;font-weight:400;padding:0;margin:0}
+html:has(#map-content) .hc-context {background:transparent;padding:10px 4px}
+html:has(#map-content) #dock .hc-context select {opacity:1;background:var(--hc-card);color:var(--hc-text)}
+html:has(#map-content) #switcher-layers-container .node label {font-style:normal;font-weight:400;color:var(--hc-text)}
+html:has(#map-content) #switcher-baselayer h3 {font-size:11px;font-weight:400}
+html:has(#map-content) #overview-box, html:has(#map-content) #overview-box * {text-shadow:none!important;box-shadow:none!important;filter:none!important}
+html:has(#map-content) #overview-box .ol-scale-text, html:has(#map-content) #overview-box .ol-scale-step-text {font:10px/12px Arial,sans-serif;color:var(--hc-text)}
+html:has(#map-content) #overview-bar {overflow:visible}
+html:has(#map-content) #headermenu #nominatim-search {position:absolute;left:50%;top:11px;transform:translateX(-50%);width:267px;max-width:40vw;margin:0}
+html:has(#map-content) #headermenu #auth > .pull-right {position:static}
+/* Icons retain original buttons, listeners and titles. */
+html:has(#map-content) .hc-icon-button {position:relative;background-image:none!important;text-indent:0;font-size:0!important;color:var(--hc-text)}
+html:has(#map-content) .hc-icon-button::before {content:'';display:block;position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);background-color:var(--hc-text);mask-image:var(--hc-icon);mask-position:center;mask-repeat:no-repeat;mask-size:contain;-webkit-mask-image:var(--hc-icon);-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;pointer-events:none}
+html:has(#map-content) .hc-icon-button > .icon, html:has(#map-content) .hc-icon-button > i, html:has(#map-content) .hc-icon-button > svg {visibility:hidden}
+html:has(#map-content) #navbar {width:26px}
+html:has(#map-content) #navbar button.btn {box-sizing:border-box;min-width:26px;width:26px;min-height:26px;height:26px;padding:0}
+html:has(#map-content) #navbar .slider {background-color:var(--hc-row)}
+html:has(#map-content) #dock-close,html:has(#map-content) #right-dock-close {width:24px;height:24px;min-height:24px}
+@media(max-width:600px) {
+ html:has(#map-content) #headermenu #nominatim-search {position:relative;left:auto;top:auto;transform:none;width:auto;max-width:calc(100vw - 130px)}
+ html:has(#map-content) #dock:has(.hc-field-card) {width:min(260px,calc(100vw - 30px))!important}
+}
+
+.hc-icon-pan {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M8%2012V5a2%202%200%200%201%204%200v6-7a2%202%200%200%201%204%200v7-5a2%202%200%200%201%204%200v8c0%205-3%207-7%207-3%200-5-2-7-5l-3-4a2%202%200%200%201%203-2l2%202Z%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-zoom {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2216%22%20height%3D%2216%22%2F%3E%3Cpath%20d%3D%22M9%2012h6m-3-3v6%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-extent {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%203H3v6m12-6h6v6M3%2015v6h6m12-6v6h-6M3%203l6%206m12-6-6%206M3%2021l6-6m12%206-6-6%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-plus {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%204v16M4%2012h16%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-minus {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2012h16%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-layers {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m3%208%209-5%209%205-9%205-9-5Zm0%205%209%205%209-5M3%2018l9%205%209-5%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-info {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%2010v7m0-11v1%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-popup {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%203h18v14H9l-6%204V3Z%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-print {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%208V3h12v5M6%2017H3V8h18v9h-3M6%2014h12v7H6Z%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-link {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m10%2014%204-4m-6%206-2%202a4%204%200%200%201-6-6l5-5a4%204%200%200%201%206%200m2%200%202-2a4%204%200%200%201%206%206l-5%205a4%204%200%200%201-6%200%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-close {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m5%205%2014%2014M5%2019%2019%205%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-search {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2210%22%20r%3D%226%22%2F%3E%3Cpath%20d%3D%22m15%2015%206%206%22%2F%3E%3C%2Fsvg%3E")}
+
+.hc-icon-filter {--hc-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%204h18l-7%208v7l-4%202v-9Z%22%2F%3E%3C%2Fsvg%3E")}

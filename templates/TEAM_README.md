@@ -36,7 +36,8 @@ We decided to not put the whole system to github because our infrastructure is b
      - ISO-XML TASKDATA (ISO 11783-10, grid prescription) for any ISOBUS terminal and spreader controller, loaded from a USB stick.
      
 <img width="1902" height="907" alt="image" src="https://github.com/user-attachments/assets/bbaaf22e-dd74-4f97-b14f-70eab42a8562" />
-![Uploading image.png…]()
+<img width="1907" height="913" alt="image" src="https://github.com/user-attachments/assets/48fee9f6-d435-47bd-af30-7cd68eccbd2e" />
+
 
 
 - Known limits / next steps:
